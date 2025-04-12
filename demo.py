@@ -2,8 +2,8 @@ import cv2
 import numpy as np
 import mediapipe as mp
 
-
 cap = cv2.VideoCapture(0)
+out = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc(*'XVID'), 20.0, (640, 480))
 
 while True:
     success, frame = cap.read()
