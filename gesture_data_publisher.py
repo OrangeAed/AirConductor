@@ -7,6 +7,8 @@ class GestureDataPublisher:
     def __init__(self):
         self.gesture_data = {}
 
+    def set_gesture_data(self, gesture_data):
+        self.gesture_data = gesture_data
 
     async def send_gesture_data(self):
         connection = await aio_pika.connect_robust("amqp://guest:guest@localhost/")
