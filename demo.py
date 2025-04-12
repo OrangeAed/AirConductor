@@ -3,18 +3,19 @@ import numpy as np
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+from mediapipe.tasks.python.components.processors import ClassifierOptions
 import json
 
 # TODO: figure out good way to slow down
 
 # Create gesture recognizer
 base_options = python.BaseOptions(model_asset_path='gesture_recognizer.task')
-allowed_gestures=np.array(["None", "Closed_Fist", "Open_Palm", "Pointing_Up", "Thumb_Down", "Thumb_Up", "ILoveYou"])
+allowed_gestures=np.array(["None", "Closed_Fist", "Pointing_Up", "Thumb_Down", "Thumb_Up", "ILoveYou"])
 options = vision.GestureRecognizerOptions(
-            base_options=base_options,
-            running_mode=mp.tasks.vision.RunningMode.VIDEO,
-            canned_gesture_classifier_options=mp.tasks.vision.ImageClassifierOptions(allowed_gestures)
-        )
+    base_options=base_options,
+    running_mode=mp.tasks.vision.RunningMode.VIDEO,
+    canned_gesture_classifier_options=ClassifierOptions(category_allowlist=["None", "Closed_Fist", "Pointing_Up", "Thumb_Down", "Thumb_Up", "ILoveYou"]),
+)
 
 recognizer = vision.GestureRecognizer.create_from_options(options)
 
@@ -32,6 +33,9 @@ half_y = int(y_max / 2)
 all_min = 460
 all_max = 820
 
+# Initialize results dictionary
+results = {"speed": 0, "volume": 0, "playing": False}
+
 
 def get_track(hand_x, hand_y):
     # Using cartesian quadrants
@@ -45,7 +49,7 @@ def get_track(hand_x, hand_y):
             return "Percussion"
         # Bottom left
         else:
-            return "Keys?"
+            return "Keys"
     # Right side
     else:
         # Top right
@@ -56,7 +60,26 @@ def get_track(hand_x, hand_y):
             return "Strings"
 
 
-def get_command(gesture):
+def update_results(track, gesture):
+    match gesture:
+        case "Closed_Fist":
+            results["track"] = track
+            results["playing"] = False
+        case "ILoveYou":
+            results["track"] = track
+            results["playing"] = True
+        case "Pointing_Up":
+            results["track"] = track
+            results["speed"] = 1
+        # case "Pointing_Down":
+        #     results["track"]
+        #     results["speed"] = -1
+        case "Thumb_Up":
+            results["track"] = track
+            results["volume"] = 1
+        case "Thumb_Down":
+            results["track"] = track
+            results["volume"] = -1
 
 
 
@@ -64,7 +87,7 @@ def run():
 # TODO: add delay so moving to section doesnt accidentally cause change
 # TODO: ensure gesture has to change for effect to happen
 #  (no unintentional rapid increase in volume)
-
+    last_gesture = "None"
     while True:
         success, frame = cap.read()
 
@@ -93,7 +116,9 @@ def run():
         for result in recognition_result.gestures:
             gesture = result[0].category_name
 
-
+        # Detect gesture location
+        hand_x = 0
+        hand_y = 0
         for result in recognition_result.hand_landmarks:
             norm_x = result[0].x
             norm_y = result[0].y
@@ -101,12 +126,17 @@ def run():
             hand_y = norm_y * y_max
 
         track = get_track(hand_x, hand_y)
-        command = get_command(gesture)
 
+        # Update results if necessary
+        if gesture != last_gesture:
+            update_results(track, gesture)
+            last_gesture = gesture
 
-        fname = "results.json"
-        with open(fname, 'w') as file:
-            json.dump(results, file)
+        print(results)
+
+        filename = "results.json"
+        with open(filename, 'w') as file:
+            file.write(json.dumps(results))
 
         cv2.imshow("Live Stream", frame_display)
 
