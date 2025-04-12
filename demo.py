@@ -31,6 +31,9 @@ while True:
     # Convert the frame to RBG for mediapipe
     frame_input = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
+
+
+
     cv2.imshow("Live Stream", frame_display)
 
     # End video capture by pressing 'q'
