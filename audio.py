@@ -17,7 +17,7 @@ class AudioPlayer:
         self.volume = 1
         self.speed = (1, 1)
 
-    async def chunk(self, data):
+    async def play(self, data):
         data = self._transform_audio(data)
         self.audio_stream.write(data)
         return self.file.readframes(1024)
@@ -27,34 +27,25 @@ class AudioPlayer:
         arr = np.repeat(arr * self.volume, self.speed[1])[::self.speed[0]]
         return arr.astype(np.int16).tobytes()
 
-    def play(self):
-        self.playing = True
-
-    def pause(self):
-        self.playing = False
-
-    def set_speed(self, numerator: int, denominator: int):
-        self.speed = (numerator, denominator)
-
-    def set_volume(self, value: float):
-        self.volume = value
-
     def update(self, message: aio_pika.IncomingMessage):
         gesture_data = json.loads(message.body.decode())
-        print("Received", gesture_data["gesture"])
+        self.volume = gesture_data['volume']
+        self.speed = gesture_data['speed']
+        self.playing = gesture_data['playing']
 
 
 async def main():
-    connection = await aio_pika.connect_robust("amqp://guest:guest@localhost/")
+    connection = await aio_pika.connect_robust('amqp://guest:guest@localhost/')
     channel = await connection.channel()
-    queue = await channel.declare_queue("gesture_queue", durable=True)
+    await channel.queue_delete('gesture_queue')
+    queue = await channel.declare_queue('gesture_queue', durable=True)
 
     player = AudioPlayer('Beethoven Symphony No. 9, Movement 2.wav')
 
     data = player.file.readframes(1024)
     while data:
         await queue.consume(player.update)
-        data = await player.chunk(data)
+        data = await player.play(data)
 
     player.audio_stream.stop_stream()
     player.audio_stream.close()
