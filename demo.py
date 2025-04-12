@@ -26,6 +26,13 @@ while True:
     # Flip the frame horizontally (so it looks like a mirror)
     frame_display = cv2.flip(frame, 1)
 
+    # Add section lines
+    cv2.line(frame_display, (640, 0), (640, 180), (0, 0, 0), thickness=5)
+    cv2.line(frame_display, (640, 540), (640, 720), (0, 0, 0), thickness=5)
+    cv2.line(frame_display, (820, 360), (1280, 360), (0, 0, 0), thickness=5)
+    cv2.line(frame_display, (0, 360), (460, 360), (0, 0, 0), thickness=5)
+    cv2.rectangle(frame_display, (460, 180), (820, 540), color=(0, 0, 0), thickness=5)
+
     # Convert the frame to RBG for mediapipe
     frame_input = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
