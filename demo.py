@@ -1,5 +1,4 @@
 import cv2
-import numpy as np
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
@@ -17,43 +16,92 @@ cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
-while True:
-    success, frame = cap.read()
-
-    if not success:
-        break
-
-    # Flip the frame horizontally (so it looks like a mirror)
-    frame_display = cv2.flip(frame, 1)
-
-    # Add section lines
-    cv2.line(frame_display, (640, 0), (640, 180), (0, 0, 0), thickness=5)
-    cv2.line(frame_display, (640, 540), (640, 720), (0, 0, 0), thickness=5)
-    cv2.line(frame_display, (820, 360), (1280, 360), (0, 0, 0), thickness=5)
-    cv2.line(frame_display, (0, 360), (460, 360), (0, 0, 0), thickness=5)
-    cv2.rectangle(frame_display, (460, 180), (820, 540), color=(0, 0, 0), thickness=5)
-
-    # Convert the frame to RBG for mediapipe
-    frame_input = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-    # Get current timestamp
-    timestamp_ms = int(cap.get(cv2.CAP_PROP_POS_MSEC))
-
-    # Detect gestures
-    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_display)
-    recognition_result = (recognizer.recognize_for_video(mp_image, timestamp_ms))
-
-    for gesture_ranking in recognition_result.gestures:
-        gesture = gesture_ranking[0].category_name
-        print("Gesture: ", gesture)
+# Establish key points
+x_min = 0
+y_min = 0
+x_max = 1280
+y_max = 720
+half_y = int(y_max / 2)
+all_min = 460
+all_max = 820
 
 
-    cv2.imshow("Live Stream", frame_display)
+def determine_command_recipient(hand_x, hand_y):
+    # Using cartesian quadrants
+    if hand_x >= all_min and hand_x <= all_max:
+        return "All"
 
-    # End video capture by pressing 'q'
-    if cv2.waitKey(1) == ord('q'):
-        break
+    # Left side
+    if hand_x < all_min:
+        # Top left
+        if hand_y >= half_y:
+            return "Quadrant 2"
+        # Bottom left
+        else:
+            return "Quadrant 3"
+    # Right side
+    else:
+        # Top right
+        if hand_y >= half_y:
+            return "Quadrant 1"
+        # Bottom right
+        else:
+            return "Quadrant 4"
 
-# Ensure the window closes and free up resources
-cv2.destroyAllWindows()
-cap.release()
+def run():
+# TODO: add landmarks so can detect section by landmark 9 (centermost)
+# TODO: add delay so moving to section doesnt accidentally cause change
+# TODO: ensure gesture has to change for effect to happen
+#  (no unintentional rapid increase in volume)
+
+    while True:
+        success, frame = cap.read()
+
+        if not success:
+            break
+
+        # Flip the frame horizontally (so it looks like a mirror)
+        frame_display = cv2.flip(frame, 1)
+
+        # Add section lines
+        cv2.line(frame_display, (all_max, half_y), (x_max, half_y), (0, 0, 0), thickness=5)
+        cv2.line(frame_display, (x_min, half_y), (all_min, half_y), (0, 0, 0), thickness=5)
+        cv2.rectangle(frame_display, (all_min, y_min), (all_max, y_max), color=(0, 0, 0), thickness=5)
+
+        # Convert the frame to RBG for mediapipe
+        frame_input = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        # Get current timestamp
+        timestamp_ms = int(cap.get(cv2.CAP_PROP_POS_MSEC))
+
+        # Detect gestures
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_display)
+        recognition_result = (recognizer.recognize_for_video(mp_image, timestamp_ms))
+
+
+        for result in recognition_result.gestures:
+            gesture = result[0].category_name
+            # print("Gesture: ", gesture)
+
+        for result in recognition_result.hand_landmarks:
+            norm_x = result[0].x
+            norm_y = result[0].y
+            hand_x = norm_x * x_max
+            hand_y = norm_y * y_max
+
+            print(determine_command_recipient(hand_x, hand_y))
+
+        cv2.imshow("Live Stream", frame_display)
+
+        # End video capture by pressing 'q'
+        if cv2.waitKey(1) == ord('q'):
+            break
+
+    # Ensure the window closes and free up resources
+    cv2.destroyAllWindows()
+    cap.release()
+
+
+
+if __name__ == '__main__':
+    run()
