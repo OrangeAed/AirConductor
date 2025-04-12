@@ -2,10 +2,12 @@ import asyncio
 import aio_pika
 import json
 import time
+from threading import Thread
 
-class GestureDataPublisher:
-    def __init__(self, queue_name="gesture_queue"):
+class DataPublisher:
+    def __init__(self, queue_name="data_queue"):
         self.gesture_data = {}
+        self.file_location = ""
         self.queue_name = queue_name
         self.send_data = True
 
@@ -32,7 +34,36 @@ class GestureDataPublisher:
                     print("Sent:", gesture_data)
                 await asyncio.sleep(1)
 
+    async def send_string_data(self):
+        connection = await aio_pika.connect_robust("amqp://guest:guest@localhost/")
+        async with connection:
+            channel = await connection.channel()
+
+            await channel.declare_queue(self.queue_name, durable=True)
+
+            while True:
+                if self.send_data:
+                    self.send_data = False
+                    file_location = self.file_location
+                    message = aio_pika.Message(
+                        body=file_location.encode(),
+                        delivery_mode=aio_pika.DeliveryMode.PERSISTENT
+                    )
+                    await channel.default_exchange.publish(message, routing_key=self.queue_name)
+                    print("Sent:", file_location)
+                await asyncio.sleep(1)
+
+async def main():
+    gdp = DataPublisher()
+    gdp.gesture_data = {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "gesture": "swipe_right"}
+    ldp  = DataPublisher()
+    ldp.file_location = "C:\\Users\\sadit\PycharmProjects"
+
+    await asyncio.gather(gdp.send_gesture_data(), ldp.send_string_data())
+
 if __name__ == "__main__":
-    gdp = GestureDataPublisher()
-    gdp.gesture_data = {"timestamp": "whatever"}
-    asyncio.run(gdp.send_gesture_data())
+    loop = asyncio.get_event_loop()
+    try:
+        loop.run_until_complete(main())
+    finally:
+        loop.close()

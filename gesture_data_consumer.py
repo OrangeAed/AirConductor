@@ -3,7 +3,7 @@ import datetime
 import aio_pika
 import asyncio
 import json
-from gesture_data_publisher import GestureDataPublisher
+from gesture_data_publisher import DataPublisher
 import threading
 
 def on_message(message: aio_pika.IncomingMessage):
@@ -33,7 +33,7 @@ def set_message():
         gdp.set_gesture_data({"timestamp": datetime.datetime.now()})
 
 if __name__ == "__main__":
-    gdp = GestureDataPublisher('gesture_queue')
+    gdp = DataPublisher('gesture_queue')
     gdp.set_gesture_data({"timestamp": "whatever"})
     t1 = threading.Thread(target=run_loop(gdp))
     t2 = threading.Thread(target=set_message)
