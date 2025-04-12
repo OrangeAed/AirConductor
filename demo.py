@@ -4,15 +4,13 @@ import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
-# base_options = python.BaseOptions(model_asset_path='hand_landmarker.task')
-# mp_hands = mp.solutions.hands
-
-
-# options = vision.GestureRecognizerOptions(base_options=base_options,
-#                                           running_mode = vision.RunningMode.LIVE_STREAM,
-#                                           result_callback=save_result)
-
-
+# Create gesture recognizer
+base_options = python.BaseOptions(model_asset_path='gesture_recognizer.task')
+options = vision.GestureRecognizerOptions(
+            base_options=base_options,
+            running_mode=mp.tasks.vision.RunningMode.VIDEO
+        )
+recognizer = vision.GestureRecognizer.create_from_options(options)
 
 # Live video from webcam
 cap = cv2.VideoCapture(0)
@@ -31,7 +29,16 @@ while True:
     # Convert the frame to RBG for mediapipe
     frame_input = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
+    # Get current timestamp
+    timestamp_ms = int(cap.get(cv2.CAP_PROP_POS_MSEC))
 
+    # Detect gestures
+    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_display)
+    recognition_result = (recognizer.recognize_for_video(mp_image, timestamp_ms))
+
+    for gesture_ranking in recognition_result.gestures:
+        gesture = gesture_ranking[0].category_name
+        print("Gesture: ", gesture)
 
 
     cv2.imshow("Live Stream", frame_display)
