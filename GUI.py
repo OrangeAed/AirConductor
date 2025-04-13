@@ -1,3 +1,6 @@
+import subprocess
+import sys
+
 import customtkinter as ctk
 from tkinter import filedialog
 from pydub import AudioSegment
@@ -53,6 +56,8 @@ class VideoStreamApp:
             filename = f"songs/{filename.split(".")[0]}.wav"
             audio.export(filename, format="wav")
             send_message(filename)
+            subprocess.Popen(["python", "demo.py"])
+            sys.exit(0)
 
 
     def update_video(self):
