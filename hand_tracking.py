@@ -96,16 +96,18 @@ def update_results(track, gesture):
             results["track"] = track
             results["volume"] = -1
 
+
 def is_pointing_down(index, pinky, ring, middle, thumb):
     if index > thumb:
         if thumb > pinky and thumb > ring and thumb > middle:
             return True
     return False
 
+
 def run(queue, timeout=100):
-# TODO: add delay so moving to section doesnt accidentally cause change
-# TODO: ensure gesture has to change for effect to happen
-#  (no unintentional rapid increase in volume)
+    # TODO: add delay so moving to section doesnt accidentally cause change
+    # TODO: ensure gesture has to change for effect to happen
+    #  (no unintentional rapid increase in volume)
     last_gesture = "None"
     time = datetime.now()
     while datetime.now() < time + timedelta(seconds=timeout):
@@ -184,7 +186,6 @@ def run(queue, timeout=100):
     # Ensure the window closes and free up resources
     cv2.destroyAllWindows()
     cap.release()
-
 
 
 if __name__ == '__main__':
