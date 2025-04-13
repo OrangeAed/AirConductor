@@ -8,27 +8,21 @@ from mediapipe.tasks.python import vision
 from mediapipe.tasks.python.components.processors import ClassifierOptions
 import json
 
-# TODO: control what is sent to wyatt (should only be when there is a change)
-
-# Set up hand landmarks
-mp_hands = mp.solutions.hands
-
 # Create gesture recognizer
-base_gesture_options = python.BaseOptions(model_asset_path='gesture_recognizer.task')
-allowed_gestures = np.array(["None", "Closed_Fist", "Pointing_Up", "Thumb_Down", "Thumb_Up", "ILoveYou"])
-gesture_options = vision.GestureRecognizerOptions(
-    base_options=base_gesture_options,
+base_options = python.BaseOptions(model_asset_path='gesture_recognizer.task')
+options = vision.GestureRecognizerOptions(
+    base_options=base_options,
     running_mode=mp.tasks.vision.RunningMode.VIDEO,
     canned_gesture_classifier_options=ClassifierOptions(category_allowlist=["None",
                                                                             "Closed_Fist",
+                                                                            "Open_Palm",
                                                                             "Pointing_Up",
                                                                             "Thumb_Down",
                                                                             "Thumb_Up",
                                                                             "ILoveYou"]),
 )
 
-recognizer = vision.GestureRecognizer.create_from_options(gesture_options)
-
+recognizer = vision.GestureRecognizer.create_from_options(options)
 
 # Live video from webcam
 cap = cv2.VideoCapture(0)
@@ -55,18 +49,18 @@ def get_track(hand_x, hand_y):
 
     # Left side
     if hand_x < all_min:
-        # Upper left
+        # Top left
         if hand_y <= half_y:
             return "ul"
-        # Lower left
+        # Bottom left
         else:
             return "ll"
     # Right side
     else:
-        # Upper right
+        # Top right
         if hand_y <= half_y:
             return "ur"
-        # Lower right
+        # Bottom right
         else:
             return "lr"
 
@@ -77,37 +71,34 @@ def update_results(track, gesture):
             results["track"] = track
             results["speed"] = 0
             results["volume"] = 0
+            print("None")
         case "Closed_Fist":
             results["track"] = track
             results["playing"] = False
+            print("PAUSE")
         case "ILoveYou":
             results["track"] = track
             results["playing"] = True
+            print("PLAY")
         case "Pointing_Up":
             results["track"] = track
             results["speed"] = 1
-        case "Pointing_Down":
+            print("SPEED UP")
+        case "Open_Palm":
             results["track"] = track
             results["speed"] = -1
+            print("SLOW DOWNq")
         case "Thumb_Up":
             results["track"] = track
             results["volume"] = 1
+            print("VOLUME UP")
         case "Thumb_Down":
             results["track"] = track
             results["volume"] = -1
-
-
-def is_pointing_down(index, pinky, ring, middle, thumb):
-    if index > thumb:
-        if thumb > pinky and thumb > ring and thumb > middle:
-            return True
-    return False
+            print("VOLUME DOWN")
 
 
 def run(queue, timeout=100):
-    # TODO: add delay so moving to section doesnt accidentally cause change
-    # TODO: ensure gesture has to change for effect to happen
-    #  (no unintentional rapid increase in volume)
     last_gesture = "None"
     time = datetime.now()
     while datetime.now() < time + timedelta(seconds=timeout):
@@ -124,19 +115,21 @@ def run(queue, timeout=100):
         cv2.line(frame_display, (x_min, half_y), (all_min, half_y), (0, 0, 0), thickness=5)
         cv2.rectangle(frame_display, (all_min, y_min), (all_max, y_max), color=(0, 0, 0), thickness=5)
 
-        # Convert the frame to RBG for mediapipe
-        frame_input = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # Add labels
+        # cv2.putText(frame_display, all_label, all_label_pos, font)
 
         # Get current timestamp
         timestamp_ms = int(cap.get(cv2.CAP_PROP_POS_MSEC))
 
-        # Recognize gestures
+        # Detect gestures
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_display)
         recognition_result = (recognizer.recognize_for_video(mp_image, timestamp_ms))
 
         gesture = "None"
         for result in recognition_result.gestures:
             gesture = result[0].category_name
+            score = result[0].score
+            print(f"{gesture} with {score} confidence")
 
         # Detect gesture location
         hand_x = 0
@@ -148,23 +141,6 @@ def run(queue, timeout=100):
             hand_y = norm_y * y_max
 
         track = get_track(hand_x, hand_y)
-
-        # Detect landmarks
-        hand = mp_hands.Hands()
-
-        landmark_results = hand.process(frame_input)
-        index = pinky = ring = middle = thumb = 0
-        if landmark_results.multi_hand_landmarks:
-            for hand_landmarks in landmark_results.multi_hand_landmarks:
-                index = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP].y * y_max
-                pinky = hand_landmarks.landmark[mp_hands.HandLandmark.PINKY_TIP].y * y_max
-                ring = hand_landmarks.landmark[mp_hands.HandLandmark.RING_FINGER_TIP].y * y_max
-                middle = hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_TIP].y * y_max
-                thumb = hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_TIP].y * y_max
-
-        if is_pointing_down(index=index, pinky=pinky, ring=ring, middle=middle, thumb=thumb):
-            gesture = "Pointing_Down"
-            print("pointing down")
 
         # Update results if necessary
         if gesture != last_gesture:
@@ -190,6 +166,7 @@ def run(queue, timeout=100):
 
 if __name__ == '__main__':
     import queue
+
     q = queue.Queue(1000)
     run(queue=q)
     while not q.empty():

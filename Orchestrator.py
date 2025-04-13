@@ -5,6 +5,7 @@ from audio import make_and_run
 from hand_tracking import run
 from GUI import create_and_run_gui
 
+
 def main():
     # Create a queue to communicate the filepath of the audio directory
     filepath_queue = mp.Queue()
@@ -51,4 +52,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
