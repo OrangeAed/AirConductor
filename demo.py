@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import cv2
 import numpy as np
 import mediapipe as mp
@@ -83,12 +85,13 @@ def update_results(track, gesture):
 
 
 
-def run():
+def run(queue, timeout=10):
 # TODO: add delay so moving to section doesnt accidentally cause change
 # TODO: ensure gesture has to change for effect to happen
 #  (no unintentional rapid increase in volume)
     last_gesture = "None"
-    while True:
+    time = datetime.now()
+    while datetime.now() < time + timedelta(seconds=timeout):
         success, frame = cap.read()
 
         if not success:
@@ -131,8 +134,8 @@ def run():
         if gesture != last_gesture:
             update_results(track, gesture)
             last_gesture = gesture
-
-        print(results)
+            queue.put(results)
+            # print(results)
 
         filename = "results.json"
         with open(filename, 'w') as file:
@@ -151,4 +154,8 @@ def run():
 
 
 if __name__ == '__main__':
-    run()
+    import queue
+    q = queue.Queue()
+    run(queue=q)
+    while not q.empty():
+        print(q.get())

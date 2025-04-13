@@ -42,24 +42,24 @@ results = {"speed": 0, "volume": 0, "playing": False}
 def get_track(hand_x, hand_y):
     # Using cartesian quadrants
     if hand_x >= all_min and hand_x <= all_max:
-        return "All"
+        return "c"
 
     # Left side
     if hand_x < all_min:
         # Top left
         if hand_y >= half_y:
-            return "Percussion"
+            return "ul"
         # Bottom left
         else:
-            return "Keys"
+            return "ll"
     # Right side
     else:
         # Top right
         if hand_y >= half_y:
-            return "Vocals"
+            return "ur"
         # Bottom right
         else:
-            return "Strings"
+            return "lr"
 
 
 def update_results(track, gesture):
