@@ -39,7 +39,9 @@ all_min = 460
 all_max = 820
 
 # Initialize results dictionary
-results = {"speed": 0, "volume": 0, "playing": False}
+playing = False
+track = 'c'
+results = {"speed": 0, "volume": 0, "playing": playing, "track": track}
 
 
 def get_track(hand_x, hand_y):
@@ -65,7 +67,9 @@ def get_track(hand_x, hand_y):
             return "lr"
 
 
-def update_results(track, gesture):
+def update_results(new_track, gesture):
+    global playing, track
+    track = new_track
     match gesture:
         case "None":
             results["track"] = track
@@ -74,11 +78,13 @@ def update_results(track, gesture):
             print("None")
         case "Closed_Fist":
             results["track"] = track
-            results["playing"] = False
+            playing = False
+            results["playing"] = playing
             print("PAUSE")
         case "ILoveYou":
             results["track"] = track
-            results["playing"] = True
+            playing = True
+            results["playing"] = playing
             print("PLAY")
         case "Pointing_Up":
             results["track"] = track
@@ -98,10 +104,46 @@ def update_results(track, gesture):
             print("VOLUME DOWN")
 
 
+# def add_image(background, new_img_fpath, loc):
+#     # Load the background and overlay images
+#     background = cv2.imread('bkg_img_fpath')
+#     overlay = cv2.imread(new_img_fpath)
+#
+#     # Get the height and width of the overlay image
+#     h, w = overlay.shape[:2]
+#
+#     # Define region of interest
+#     roi = background[0:h, 0:w]
+#
+#     # Create a mask of the overlay image
+#     overlay_gray = cv2.cvtColor(overlay, cv2.COLOR_BGR2GRAY)
+#     ret, mask = cv2.threshold(overlay_gray, 10, 255, cv2.THRESH_BINARY)
+#     mask_inv = cv2.bitwise_not(mask)
+#
+#     # Black-out the area of the overlay in the ROI
+#     background_masked = cv2.bitwise_and(roi, roi, mask=mask_inv)
+#
+#     # Take only the masked region from the overlay image
+#     overlay_masked = cv2.bitwise_and(overlay, overlay, mask=mask)
+#
+#     # Combine the masked background and masked overlay
+#     final_overlay = cv2.add(background_masked, overlay_masked)
+#
+#     # Put the overlay in the correct position
+#     x, y = loc
+#     background[0:x, 0:y] = final_overlay
+#
+#     return background
+
+
 def run(queue, timeout=100):
+    global playing, track
     last_gesture = "None"
     time = datetime.now()
     while datetime.now() < time + timedelta(seconds=timeout):
+        # Reinitialize results dictionary (except for playing)
+        results = {"speed": 0, "volume": 0,  "playing": playing, "track": track}
+
         success, frame = cap.read()
 
         if not success:
@@ -116,7 +158,17 @@ def run(queue, timeout=100):
         cv2.rectangle(frame_display, (all_min, y_min), (all_max, y_max), color=(0, 0, 0), thickness=5)
 
         # Add labels
-        # cv2.putText(frame_display, all_label, all_label_pos, font)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        all_font_scale = 3
+        color = (0, 0, 0)
+        thickness = 2
+        all_label = "All"
+        all_label_pos = (int(x_max / 2 - 50), 75)
+        cv2.putText(frame_display, all_label, all_label_pos, font, all_font_scale, color, thickness, cv2.LINE_AA)
+
+        # Add instrument symbols
+        # add_image(frame_display, 'drums.png', (100,100))
+
 
         # Get current timestamp
         timestamp_ms = int(cap.get(cv2.CAP_PROP_POS_MSEC))
