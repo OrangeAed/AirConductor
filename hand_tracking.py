@@ -46,7 +46,7 @@ results = {"speed": 0, "volume": 0, "playing": playing, "track": track}
 
 def get_track(hand_x, hand_y):
     # Using cartesian quadrants
-    if hand_x >= all_min and hand_x <= all_max:
+    if all_min <= hand_x <= all_max:
         return "c"
 
     # Left side
