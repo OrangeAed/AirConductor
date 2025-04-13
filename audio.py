@@ -25,7 +25,7 @@ class AudioPlayer:
                                 np.frombuffer(ur.readframes(ur.getnframes()), dtype=np.int16),
                                 np.frombuffer(ll.readframes(ll.getnframes()), dtype=np.int16),
                                 np.frombuffer(lr.readframes(lr.getnframes()), dtype=np.int16)]).T
-        self.volumes = np.array([2, 2, 2, 2])
+        self.volumes = np.array([0, 0, 0, 0])
 
         self.pyaudio = pyaudio.PyAudio()
         self.audio_stream = self.pyaudio.open(format=pyaudio.paInt16, channels=1,

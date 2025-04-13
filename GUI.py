@@ -14,7 +14,7 @@ class AudioUploader:
         # Application
         self.root = root
         self.root.title("Video Stream Upload")
-        self.root.geometry("1500x1000")
+        self.root.geometry("1200x800")
 
         # Set appearance mode and color theme
         ctk.set_appearance_mode("dark")  # Can be "light", "dark", or "system"

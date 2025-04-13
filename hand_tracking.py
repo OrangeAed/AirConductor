@@ -136,7 +136,7 @@ def update_results(new_track, gesture):
 #     return background
 
 
-def run(queue, timeout=100):
+def run(queue, timeout=300):
     global playing, track, results
     last_gesture = "None"
     time = datetime.now()
@@ -195,7 +195,7 @@ def run(queue, timeout=100):
         track = get_track(hand_x, hand_y)
 
         # Update results if necessary
-        if gesture != last_gesture:
+        if gesture != last_gesture or track != results["track"]:
             update_results(track, gesture)
             last_gesture = gesture
             queue.put(results)
