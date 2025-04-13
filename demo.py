@@ -85,7 +85,7 @@ def update_results(track, gesture):
 
 
 
-def run():
+def run(queue):
 # TODO: add delay so moving to section doesnt accidentally cause change
 # TODO: ensure gesture has to change for effect to happen
 #  (no unintentional rapid increase in volume)
@@ -133,7 +133,7 @@ def run():
         if gesture != last_gesture:
             update_results(track, gesture)
             last_gesture = gesture
-            gesture_data_publisher.set_gesture_data(gesture)
+            queue.put(results)
 
 
         filename = "results.json"
@@ -156,4 +156,4 @@ def run():
 if __name__ == '__main__':
     gesture_data_publisher.queue_name = "ges_queue"
     Thread(target = gesture_data_publisher.send_gesture_data).start()
-    run()
+    # run()

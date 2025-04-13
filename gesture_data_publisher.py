@@ -60,18 +60,18 @@ class DataPublisher:
     #                 await asyncio.sleep(1)
 
 
-async def main():
-    gdp = DataPublisher()
-    gdp.gesture_data = {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "gesture": "swipe_right"}
-    ldp = DataPublisher()
-    ldp.file_location = "C:\\Users\\sadit\PycharmProjects"
-
-    await asyncio.gather(gdp.send_gesture_data(), ldp.send_string_data())
-
-
-if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    try:
-        loop.run_until_complete(main())
-    finally:
-        loop.close()
+# async def main():
+#     gdp = DataPublisher()
+#     gdp.gesture_data = {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "gesture": "swipe_right"}
+#     ldp = DataPublisher()
+#     ldp.file_location = "C:\\Users\\sadit\PycharmProjects"
+#
+#     await asyncio.gather(gdp.send_gesture_data(), ldp.send_string_data())
+#
+#
+# if __name__ == "__main__":
+#     loop = asyncio.get_event_loop()
+#     try:
+#         loop.run_until_complete(main())
+#     finally:
+#         loop.close()

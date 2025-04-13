@@ -8,7 +8,9 @@ import threading
 
 def on_message(message: aio_pika.IncomingMessage):
     gesture_data = json.loads(message.body.decode())
+
     print("Received", gesture_data)
+
 
 
 async def main():

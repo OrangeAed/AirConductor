@@ -1,7 +1,11 @@
 import multiprocessing as mp
 
+from AllTogetherNow.hand_tracking import make_and_run
+# import multiprocessing
+
 from fake_demo import FakeDemo
-# from hand_tracking import GestureRecognizer
+from hand_tracking import GestureRecognizer
+from AllTogetherNow.demo import run
 from fake_audio import FakeAudio
 
 if __name__ == '__main__':
@@ -9,12 +13,12 @@ if __name__ == '__main__':
     queue = mp.Queue()
 
     # Create and start the fake demo process
-    demo_process = mp.Process(target=FakeDemo(queue).run, daemon=True)
-    demo_process.start()
-    print("after")
+    # demo_process = mp.Process(target=FakeDemo(queue).run)
+    # demo_process.start()
+    # print("after")
 
-    # demo_process = mp.Process(target=GestureRecognizer("Demo").run)
-    # demo_process.run()
+    demo_process = mp.Process(target=run(queue))
+    demo_process.start()
 
     # Create and start the fake audio process
     audio_process = mp.Process(target=FakeAudio(queue).play)
