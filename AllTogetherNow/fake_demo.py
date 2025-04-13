@@ -3,7 +3,7 @@ from time import sleep
 class FakeDemo:
     def __init__(self, queue):
         self.queue = queue
-        self.results = {"speed": 0, "volume": 0, "playing": False}
+        self.results = {"speed": 0, "volume": 0, "playing": False, 'track': 'c'}
 
     def run(self):
         while True:

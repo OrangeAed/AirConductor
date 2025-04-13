@@ -80,3 +80,7 @@ class AudioPlayer:
         self.audio_stream.stop_stream()
         self.audio_stream.close()
         self.pyaudio.terminate()
+
+def make_and_run(path, queue):
+    player = AudioPlayer(path, queue)
+    player.run()
