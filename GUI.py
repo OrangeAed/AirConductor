@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 
@@ -7,8 +8,9 @@ from pydub import AudioSegment
 from PIL import Image, ImageTk
 import cv2
 
-class VideoStreamApp:
-    def __init__(self, root):
+class AudioUploader:
+    def __init__(self, root, queue):
+        self.queue = queue
         # Application
         self.root = root
         self.root.title("Video Stream Upload")
@@ -46,18 +48,27 @@ class VideoStreamApp:
         self.cap = cv2.VideoCapture(0)
         self.update_video()
 
+        self.output_filepath = ""
+
     def upload_audio(self):
-        """Simulate video upload functionality"""
-        global audio, paused_pos, audio_length
-        file_path = filedialog.askopenfilename(filetypes=[("MP3 files", "*.mp3")])
-        if file_path:
-            audio = AudioSegment.from_mp3(file_path)
-            filename = file_path.split("/")[-1]
-            filename = f"songs/{filename.split(".")[0]}.wav"
-            audio.export(filename, format="wav")
-            send_message(filename)
-            subprocess.Popen(["python", "demo.py"])
-            sys.exit(0)
+        """Allow the user to upload a folder with multiple audio tracks."""
+        folder_path = filedialog.askdirectory()
+        if folder_path:
+            output_dir = "songs\\" + os.path.basename(folder_path)
+            os.makedirs(output_dir, exist_ok=True)
+            for file_name in os.listdir(folder_path):
+                file_path = os.path.join(folder_path, file_name)
+                if file_name.endswith(".mp3"):
+                    audio = AudioSegment.from_mp3(file_path)
+                elif file_name.endswith(".wav"):
+                    audio = AudioSegment.from_wav(file_path)
+                else:
+                    continue
+                output_name = os.path.join(output_dir, f"{os.path.splitext(file_name)[0]}.wav")
+                audio.export(output_name, format="wav")
+
+        self.output_filepath = output_dir
+        self.root.quit()
 
 
     def update_video(self):
@@ -88,13 +99,8 @@ class VideoStreamApp:
             self.cap.release()
 
 
-def send_message(message):
-    """Sends a message to the audio processing functionality"""
-    print(message)
-    pass
-
-
-if __name__ == "__main__":
+def create_and_run_gui(queue):
     root = ctk.CTk()
-    app = VideoStreamApp(root)
+    app = AudioUploader(root, queue)
     root.mainloop()
+    queue.put(app.output_filepath)
