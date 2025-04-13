@@ -25,20 +25,33 @@ class AudioUploader:
         self.main_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
         # Video stream display area
-        self.video_label = ctk.CTkLabel(self.main_frame, text="Video Stream",
-                                        font=("Arial", 20, "bold"),
-                                        width=500, height=250)
+        self.video_label = ctk.CTkLabel(self.main_frame, text="Video Stream Preview",
+                                        font=("Arial", 50, "bold"),
+                                        width=1500, height=750)
         self.video_label.pack(pady=(10, 5))
 
+        # Create a frame to hold the buttons
+        self.button_frame = ctk.CTkFrame(self.main_frame)
+        self.button_frame.pack(pady=10)
 
         # Upload button
-        self.upload_button = ctk.CTkButton(self.main_frame,
-                                           text="Upload Audio File",
+        self.upload_button = ctk.CTkButton(self.button_frame,
+                                           text="Upload Audio Folder",
                                            command=self.upload_audio,
                                            width=200,
                                            height=40,
                                            corner_radius=8)
-        self.upload_button.pack(pady=10)
+        self.upload_button.pack(side="left", padx=5)
+
+        # Start button
+        self.start_button = ctk.CTkButton(self.button_frame,
+                                          text="Start",
+                                          command=self.start_process,
+                                          width=200,
+                                          height=40,
+                                          corner_radius=8,
+                                          state="disabled")  # Initially disabled
+        self.start_button.pack(side="left", padx=5)
 
         # Status label
         self.status_label = ctk.CTkLabel(self.main_frame, text="",
@@ -47,6 +60,8 @@ class AudioUploader:
 
         self.cap = cv2.VideoCapture(0)
         self.update_video()
+
+
 
         self.output_filepath = ""
 
@@ -67,9 +82,12 @@ class AudioUploader:
                 output_name = os.path.join(output_dir, f"{os.path.splitext(file_name)[0]}.wav")
                 audio.export(output_name, format="wav")
 
-        self.output_filepath = output_dir
-        self.root.quit()
+            self.output_filepath = output_dir
+            self.start_button.configure(state="normal")  # Enable the Start button
+            self.status_label.configure(text="Folder uploaded successfully!")
 
+    def start_process(self):
+        self.root.quit()
 
     def update_video(self):
         """Simulate video stream functionality"""
@@ -77,6 +95,9 @@ class AudioUploader:
         if success:
             # Flip the frame horizontally
             frame = cv2.flip(frame, 1)
+
+            # Resize the frame to fit the label
+            frame = cv2.resize(frame, (1500, 1200))
 
             # Convert the frame to RGB (from BGR)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)

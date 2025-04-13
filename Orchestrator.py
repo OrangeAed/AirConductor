@@ -1,4 +1,3 @@
-import asyncio
 import multiprocessing as mp
 from time import sleep
 
