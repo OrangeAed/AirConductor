@@ -16,10 +16,10 @@ class AudioPlayer:
     def __init__(self, path: str, queue):
         self.queue = queue
 
-        ul = wave.open(path + 'ul.wav', 'rb')
-        ur = wave.open(path + 'ur.wav', 'rb')
-        ll = wave.open(path + 'll.wav', 'rb')
-        lr = wave.open(path + 'lr.wav', 'rb')
+        ul = wave.open(path + '\\ul.wav', 'rb')
+        ur = wave.open(path + '\\ur.wav', 'rb')
+        ll = wave.open(path + '\\ll.wav', 'rb')
+        lr = wave.open(path + '\\lr.wav', 'rb')
 
         self.tracks = np.stack([np.frombuffer(ul.readframes(ul.getnframes()), dtype=np.int16),
                                 np.frombuffer(ur.readframes(ur.getnframes()), dtype=np.int16),

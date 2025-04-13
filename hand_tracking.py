@@ -131,7 +131,7 @@ def add_image(img1, new_img_fpath, ulc, lrc):
 
 
 def run(queue, timeout=100):
-    global playing, track
+    global playing, track, results
     last_gesture = "None"
     time = datetime.now()
     while datetime.now() < time + timedelta(seconds=timeout):
