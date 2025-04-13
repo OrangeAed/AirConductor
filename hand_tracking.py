@@ -137,7 +137,7 @@ def update_results(new_track, gesture):
 
 
 def run(queue, timeout=100):
-    global playing, track
+    global playing, track, results
     last_gesture = "None"
     time = datetime.now()
     while datetime.now() < time + timedelta(seconds=timeout):
@@ -180,8 +180,8 @@ def run(queue, timeout=100):
         gesture = "None"
         for result in recognition_result.gestures:
             gesture = result[0].category_name
-            score = result[0].score
-            print(f"{gesture} with {score} confidence")
+            # score = result[0].score
+            # print(f"{gesture} with {score} confidence")
 
         # Detect gesture location
         hand_x = 0
