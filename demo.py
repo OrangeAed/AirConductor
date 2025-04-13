@@ -5,8 +5,10 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 from mediapipe.tasks.python.components.processors import ClassifierOptions
 import json
-
+from gesture_data_publisher import DataPublisher
+from threading import Thread
 # TODO: figure out good way to slow down
+gesture_data_publisher = DataPublisher()
 
 # Create gesture recognizer
 base_options = python.BaseOptions(model_asset_path='gesture_recognizer.task')
@@ -131,8 +133,8 @@ def run():
         if gesture != last_gesture:
             update_results(track, gesture)
             last_gesture = gesture
+            gesture_data_publisher.set_gesture_data(gesture)
 
-        print(results)
 
         filename = "results.json"
         with open(filename, 'w') as file:
@@ -150,5 +152,8 @@ def run():
 
 
 
+
 if __name__ == '__main__':
+    gesture_data_publisher.queue_name = "ges_queue"
+    Thread(target = gesture_data_publisher.send_gesture_data).start()
     run()
