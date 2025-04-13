@@ -104,36 +104,30 @@ def update_results(new_track, gesture):
             print("VOLUME DOWN")
 
 
-# def add_image(background, new_img_fpath, loc):
-#     # Load the background and overlay images
-#     background = cv2.imread('bkg_img_fpath')
-#     overlay = cv2.imread(new_img_fpath)
-#
-#     # Get the height and width of the overlay image
-#     h, w = overlay.shape[:2]
-#
-#     # Define region of interest
-#     roi = background[0:h, 0:w]
-#
-#     # Create a mask of the overlay image
-#     overlay_gray = cv2.cvtColor(overlay, cv2.COLOR_BGR2GRAY)
-#     ret, mask = cv2.threshold(overlay_gray, 10, 255, cv2.THRESH_BINARY)
-#     mask_inv = cv2.bitwise_not(mask)
-#
-#     # Black-out the area of the overlay in the ROI
-#     background_masked = cv2.bitwise_and(roi, roi, mask=mask_inv)
-#
-#     # Take only the masked region from the overlay image
-#     overlay_masked = cv2.bitwise_and(overlay, overlay, mask=mask)
-#
-#     # Combine the masked background and masked overlay
-#     final_overlay = cv2.add(background_masked, overlay_masked)
-#
-#     # Put the overlay in the correct position
-#     x, y = loc
-#     background[0:x, 0:y] = final_overlay
-#
-#     return background
+def add_image(img1, new_img_fpath, ulc, lrc):
+
+    img2 = cv2.imread(new_img_fpath)
+    img2 = cv2.resize(img2, (100, 100))
+
+    rows, col, channel = img2.shape
+
+    roi = img1[ulc[1]:lrc[1], ulc[0]:lrc[0]]
+
+    img2g = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+
+    ret, mask = cv2.threshold(img2g, 5, 255, cv2.THRESH_BINARY)
+
+    mask_inv = cv2.bitwise_not(mask)
+
+    img1_bg = cv2.bitwise_and(roi, roi, mask=mask_inv)
+
+    img2_fg = cv2.bitwise_and(img2, img2, mask=mask)
+
+    dst = cv2.add(img1_bg, img2_fg)
+
+    img1[ulc[1]:lrc[1], ulc[0]:lrc[0]] = dst
+
+    return img1
 
 
 def run(queue, timeout=300):
@@ -167,8 +161,10 @@ def run(queue, timeout=300):
         cv2.putText(frame_display, all_label, all_label_pos, font, all_font_scale, color, thickness, cv2.LINE_AA)
 
         # Add instrument symbols
-        # add_image(frame_display, 'drums.png', (100,100))
-
+        add_image(frame_display, 'singer.png', (0, 0),(100,100))
+        add_image(frame_display, 'drum.png', (1180, 620), (1280, 720))
+        add_image(frame_display, 'violin.png', (0, 620), (100, 720))
+        add_image(frame_display,"bass.png", (1180, 0), (1280, 100))
 
         # Get current timestamp
         timestamp_ms = int(cap.get(cv2.CAP_PROP_POS_MSEC))
